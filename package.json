@@ -1,0 +1,51 @@
+{
+  "name": "c64-turboassembler",
+  "displayName": "C64 Turbo Assembler",
+  "description": "Commodore 64 Turbo Assembler support for Visual Studio Code",
+  "version": "1.0.0",
+  "publisher": "MarcinRomanowski",
+  "repository": "https://github.com/marcinromanowski/vsc-c64-tasm",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": ["Programming Languages"],
+  "contributes": {
+    "languages": [
+      {
+        "id": "turboassembler",
+        "aliases": ["Turbo Assembler", "TASM"],
+        "extensions": [".asm", ".tasm"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "turboassembler",
+        "scopeName": "source.assembly.turboassembler",
+        "path": "./turboassembler.tmLanguage"
+      }
+    ],
+    "commands": [
+    {
+      "command": "turboassembler.compileAndRun",
+      "title": "Compile ASM and run VICE"
+    }
+  ],
+  "keybindings": [
+    {
+      "command": "turboassembler.compileAndRun",
+      "key": "f5",
+      "when": "editorLangId == turboassembler"
+    }
+  ]
+  },
+  "main": "./extension.js",
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.80.0",
+    "typescript": "^5.1.0"
+  }
+}
