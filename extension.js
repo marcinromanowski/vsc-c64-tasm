@@ -1,26 +1,26 @@
 "use strict";
 
-const vscode = require("vscode");
-const cp = require('child_process');
-const path = require('path');
+import { commands as _commands, languages, TextEdit, window } from "vscode";
+import { exec } from 'child_process';
+import { dirname, extname, basename, join } from 'path';
 
 //const hoverProvider = require("./helpTexts/hoverProvider");
-const AsmDefinitionProvider = require("./definitionProvider");
+import AsmDefinitionProvider from "./definitionProvider";
 
 function activate(context) {
 
   //vscode.languages.registerHoverProvider({ scheme: "*", language: "turboassembler" }, hoverProvider);
 
   const commands = {
-    "tasm-c64.build": () => alert('ok') //run(compile())
+    "tass-c64.build": () => alert('ok') //run(compile())
   };
 
-  const toCommand = ([command, callback]) => vscode.commands.registerCommand(command, callback);
+  const toCommand = ([command, callback]) => _commands.registerCommand(command, callback);
   Object.entries(commands)
     .map(toCommand)
     .forEach((command) => context.subscriptions.push(command));
 
-  let disposable = vscode.languages.registerDocumentFormattingEditProvider(
+  let disposable = languages.registerDocumentFormattingEditProvider(
     { language: "turboassembler" },
     {
       provideDocumentFormattingEdits(document) {
@@ -59,7 +59,7 @@ function activate(context) {
           }
 
           if (newText !== line.text) {
-            edits.push(vscode.TextEdit.replace(line.range, newText));
+            edits.push(TextEdit.replace(line.range, newText));
           }
 
           if (newText.startsWith("*")) {
@@ -84,29 +84,29 @@ function activate(context) {
   context.subscriptions.push(disposable);
 
 
-  disposable = vscode.commands.registerCommand('turboassembler.compileAndRun', function () {
-    const editor = vscode.window.activeTextEditor;
+  disposable = _commands.registerCommand('turboassembler.compileAndRun', function () {
+    const editor = window.activeTextEditor;
     if (!editor) {
-      vscode.window.showErrorMessage("Brak otwartego pliku!");
+      window.showErrorMessage("Brak otwartego pliku!");
       return;
     }
 
     const filePath = editor.document.fileName;
-    const fileDir = path.dirname(filePath);
-    const fileExt = path.extname(filePath);
-    const sourceFile = path.basename(filePath);
+    const fileDir = dirname(filePath);
+    const fileExt = extname(filePath);
+    const sourceFile = basename(filePath);
     const binaryFile = sourceFile.replace(fileExt, '.prg');
-    const exeFile = path.join(fileDir, `${binaryFile}`);
+    const exeFile = join(fileDir, `${binaryFile}`);
 
-    cp.exec(`64tass -C -a -i "${sourceFile}" -o "${binaryFile}"`, { cwd: fileDir }, (error, stdout, stderr) => {
+    exec(`64tass -C -a -i "${sourceFile}" -o "${binaryFile}"`, { cwd: fileDir }, (error, stdout, stderr) => {
       if (error) {
-        vscode.window.showErrorMessage(`Compilation error: ${stderr}`);
+        window.showErrorMessage(`Compilation error: ${stderr}`);
         return;
       }
 
-      cp.exec(`x64 "${binaryFile}"`, { cwd: fileDir }, (err, out, errOut) => {
+      exec(`x64 "${binaryFile}"`, { cwd: fileDir }, (err, out, errOut) => {
         if (err) {
-          vscode.window.showErrorMessage(`Run error: ${errOut}`);
+          window.showErrorMessage(`Run error: ${errOut}`);
         }
 
         /*
@@ -131,7 +131,7 @@ function activate(context) {
   context.subscriptions.push(disposable);
 
 
-  const definitionProvider = vscode.languages.registerDefinitionProvider(
+  const definitionProvider = languages.registerDefinitionProvider(
     { language: "turboassembler" },
     new AsmDefinitionProvider()
   );
@@ -143,5 +143,7 @@ function activate(context) {
 function deactivate() { }
 
 
-exports.activate = activate;
-exports.deactivate = deactivate;
+const _activate = activate;
+export { _activate as activate };
+const _deactivate = deactivate;
+export { _deactivate as deactivate };

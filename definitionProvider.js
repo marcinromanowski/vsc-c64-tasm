@@ -1,4 +1,4 @@
-const vscode = require('vscode');
+import { Location } from 'vscode';
 
 class AsmDefinitionProvider {
     provideDefinition(document, position, token) {
@@ -13,11 +13,11 @@ class AsmDefinitionProvider {
         let match;
         while ((match = regex.exec(text)) !== null) {
             const startPosition = document.positionAt(match.index);
-            return new vscode.Location(document.uri, startPosition);
+            return new Location(document.uri, startPosition);
         }
 
         return;
     }
 }
 
-module.exports = AsmDefinitionProvider;
+export default AsmDefinitionProvider;
