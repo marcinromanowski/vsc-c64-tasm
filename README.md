@@ -1,4 +1,4 @@
-# Visual Studio Code C64 TurbAssembler
+# Visual Studio Code C64 TurboAssembler
 
 Visual Studio Code 6502 assembly language support for C64 development with Turbo Assembler.
 
