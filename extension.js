@@ -4,21 +4,14 @@ const vscode = require("vscode");
 const cp = require('child_process');
 const path = require('path');
 
-//const hoverProvider = require("./helpTexts/hoverProvider");
 const AsmDefinitionProvider = require("./definitionProvider");
 
+let diagnosticCollection;
+
+
 function activate(context) {
-
-  //vscode.languages.registerHoverProvider({ scheme: "*", language: "turboassembler" }, hoverProvider);
-
-  const commands = {
-    "tasm-c64.build": () => alert('ok') //run(compile())
-  };
-
-  const toCommand = ([command, callback]) => vscode.commands.registerCommand(command, callback);
-  Object.entries(commands)
-    .map(toCommand)
-    .forEach((command) => context.subscriptions.push(command));
+  diagnosticCollection = vscode.languages.createDiagnosticCollection('turboassembler');
+  context.subscriptions.push(diagnosticCollection);
 
   let disposable = vscode.languages.registerDocumentFormattingEditProvider(
     { language: "turboassembler" },
@@ -91,22 +84,28 @@ function activate(context) {
       return;
     }
 
-    const filePath = editor.document.fileName;
+    const document = editor.document;
+    const filePath = document.fileName;
     const fileDir = path.dirname(filePath);
     const fileExt = path.extname(filePath);
     const sourceFile = path.basename(filePath);
     const binaryFile = sourceFile.replace(fileExt, '.prg');
     const exeFile = path.join(fileDir, `${binaryFile}`);
 
+    diagnosticCollection.clear();
+
     cp.exec(`64tass -C -a -i "${sourceFile}" -o "${binaryFile}"`, { cwd: fileDir }, (error, stdout, stderr) => {
       if (error) {
-        vscode.window.showErrorMessage(`Compilation error: ${stderr}`);
+        //vscode.window.showErrorMessage(`Compilation error: ${stderr}`);
+        processCompilerErrors(document, stderr);
         return;
       }
 
+
       cp.exec(`x64 "${binaryFile}"`, { cwd: fileDir }, (err, out, errOut) => {
         if (err) {
-          vscode.window.showErrorMessage(`Run error: ${errOut}`);
+          // vscode.window.showErrorMessage(`Run error: ${errOut}`);
+          processCompilerErrors(document, stderr);
         }
 
         /*
@@ -137,10 +136,51 @@ function activate(context) {
   );
 
   context.subscriptions.push(definitionProvider);
+
+  const hoverProvider = vscode.languages.registerHoverProvider('turboassembler', {
+    provideHover(document, position, token) {
+      const range = document.getWordRangeAtPosition(position);
+      const word = range ? document.getText(range) : '';
+
+      return new vscode.Hover(`**Information about:** ${word}`);
+    }
+  });
+
+  //context.subscriptions.push(hoverProvider);
 }
 
 
-function deactivate() { }
+function processCompilerErrors(document, stderr) {
+  const diagnostics = [];
+  const lines = stderr; //stderr.split("\n");
+  const match = stderr.match(/([^:]+):(\d+):\d+: error: (.+)/);
+
+  let lineNumber = 1;
+  let errorDescription = stderr; //match[3]; // general syntax
+
+  if (match) {
+    lineNumber = parseInt(match[2], 10); // 246
+    errorDescription = stderr; //match[3]; // general syntax
+
+  }
+
+  const range = new vscode.Range(lineNumber, 0, lineNumber - 1, 100);
+  const diagnostic = new vscode.Diagnostic(
+    range,
+    errorDescription,
+    vscode.DiagnosticSeverity.Error
+  );
+  diagnostics.push(diagnostic);
+
+  diagnosticCollection.set(document.uri, diagnostics);
+}
+
+
+function deactivate() {
+  if (diagnosticCollection) {
+    diagnosticCollection.dispose();
+  }
+}
 
 
 exports.activate = activate;

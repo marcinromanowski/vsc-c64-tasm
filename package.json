@@ -21,8 +21,7 @@
           "TASS"
         ],
         "extensions": [
-          ".asm",
-          ".tasm"
+          ".asm"
         ],
         "configuration": "./language-configuration.json"
       }
@@ -32,6 +31,12 @@
         "language": "turboassembler",
         "scopeName": "source.assembly.turboassembler",
         "path": "./turboassembler.tmLanguage"
+      }
+    ],
+    "hoverProviders": [
+      {
+        "language": "turboassembler",
+        "selector": "*.asm"
       }
     ],
     "commands": [
@@ -51,7 +56,8 @@
   "main": "./extension.js",
   "scripts": {
     "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./"
+    "watch": "tsc -watch -p ./",
+    "prepublish": "vsce package"
   },
   "devDependencies": {
     "@types/vscode": "^1.80.0",
