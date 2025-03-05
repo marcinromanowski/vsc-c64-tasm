@@ -96,7 +96,6 @@ function activate(context) {
 
     cp.exec(`64tass -C -a -i "${sourceFile}" -o "${binaryFile}"`, { cwd: fileDir }, (error, stdout, stderr) => {
       if (error) {
-        //vscode.window.showErrorMessage(`Compilation error: ${stderr}`);
         processCompilerErrors(document, stderr);
         return;
       }
@@ -104,7 +103,6 @@ function activate(context) {
 
       cp.exec(`x64 "${binaryFile}"`, { cwd: fileDir }, (err, out, errOut) => {
         if (err) {
-          // vscode.window.showErrorMessage(`Run error: ${errOut}`);
           processCompilerErrors(document, stderr);
         }
 
@@ -152,15 +150,14 @@ function activate(context) {
 
 function processCompilerErrors(document, stderr) {
   const diagnostics = [];
-  const lines = stderr; //stderr.split("\n");
-  const match = stderr.match(/([^:]+):(\d+):\d+: error: (.+)/);
 
   let lineNumber = 1;
-  let errorDescription = stderr; //match[3]; // general syntax
+  let errorDescription = stderr;
 
+  const match = stderr.match(/([^:]+):(\d+):\d+: error: (.+)/);
   if (match) {
     lineNumber = parseInt(match[2], 10); // 246
-    errorDescription = stderr; //match[3]; // general syntax
+    errorDescription = stderr;
 
   }
 
